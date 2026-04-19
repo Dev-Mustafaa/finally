@@ -10,7 +10,6 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { FloatingChat } from "@/components/FloatingChat";
 import { HaritaTab } from "@/components/tabs/HaritaTab";
 import { UlasimTab } from "@/components/tabs/UlasimTab";
 import { ButceTab } from "@/components/tabs/ButceTab";
@@ -137,8 +136,12 @@ function Index() {
         </header>
 
         {/* Content */}
-        <main className={`relative flex-1 overflow-hidden px-4 pb-24 ${active === "harita" ? "pt-0" : "pt-4"}`}>
-          {active === "harita" && <HaritaTab />}
+        <main className={`relative flex-1 ${active === "harita" ? "overflow-visible pt-0 px-0" : "overflow-hidden px-4 pt-4"} pb-24`}>
+          {active === "harita" && (
+            <div className="relative w-full h-full">
+              <HaritaTab />
+            </div>
+          )}
           {active === "menu" && (
             <>
               <div
@@ -164,9 +167,6 @@ function Index() {
             </>
           )}
         </main>
-
-        {/* Bottom tabs */}
-        <FloatingChat />
 
         <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-[#E5E7EB] bg-white/95 backdrop-blur">
           <div className="grid grid-cols-2">

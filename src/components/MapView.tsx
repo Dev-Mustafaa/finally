@@ -903,9 +903,9 @@ export function MapView() {
     blueIcon: import("leaflet").Icon;
     greenIcon: import("leaflet").Icon;
   }>(null);
-  const [activeMainCategory, setActiveMainCategory] = useState<MainCategoryId | null>(null);
-  const [activeSubFilter, setActiveSubFilter] = useState<SubFilterType | null>(null);
+  const [activeMainCategories, setActiveMainCategories] = useState<MainCategoryId[]>([]);
   const [expandedMain, setExpandedMain] = useState<MainCategoryId | null>(null);
+  const [activeSubFilters, setActiveSubFilters] = useState<SubFilterType[]>([]);
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isUniversityPanelOpen, setIsUniversityPanelOpen] = useState(false);
@@ -1029,17 +1029,42 @@ export function MapView() {
     });
   };
 
-  const filteredPois = activeMainCategory === null 
+  const filteredPois = activeMainCategories.length === 0 
     ? [] // Başlangıçta hiçbiri seçili değilse gösterme
-    : activeMainCategory === 'tumu' 
+    : activeMainCategories.includes('tumu')
       ? pois 
-      : activeMainCategory === 'isletmeler' && activeSubFilter
-        ? pois.filter(poi => poi.category === activeSubFilter)
-        : []; // Diğer üst kategoriler için şimdilik boş
+      : activeMainCategories.includes('isletmeler') && activeSubFilters.length > 0
+        ? pois.filter(poi => activeSubFilters.includes(poi.category))
+        : activeMainCategories.includes('isletmeler') && activeSubFilters.length === 0
+          ? pois // İşletmeler seçili ama alt kategori seçilmemişse tüm işletmeleri göster
+          : []; // Diğer üst kategoriler için şimdilik boş
 
   const handlePOIClick = (poi: POI) => {
     setSelectedPOI(poi);
     setIsPanelOpen(true);
+  };
+
+  // Çoklu kategori seçim fonksiyonları
+  const toggleMainCategory = (catId: MainCategoryId) => {
+    setActiveMainCategories(prev => 
+      prev.includes(catId) 
+        ? prev.filter(id => id !== catId)
+        : [...prev, catId]
+    );
+  };
+
+  const toggleSubFilter = (subId: SubFilterType) => {
+    setActiveSubFilters(prev => 
+      prev.includes(subId) 
+        ? prev.filter(id => id !== subId)
+        : [...prev, subId]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setActiveMainCategories([]);
+    setActiveSubFilters([]);
+    setExpandedMain(null);
   };
 
   const closePanel = () => {
@@ -1136,70 +1161,87 @@ export function MapView() {
 
   return (
     <div style={{ height: 'calc(100vh - 112px)', width: '100%' }} className="overflow-hidden rounded-xl border border-border shadow-sm relative">
-      {/* Main Category Filter Pills */}
+      {/* Main Category Filter Pills - Çoklu Seçim */}
       <div className="absolute top-[120px] left-4 z-[1000] flex flex-col gap-2">
         {mainCategories.map((mainCat) => (
           <div key={mainCat.id}>
             <button
               onClick={() => {
                 if (mainCat.id === 'tumu') {
-                  // Tümü toggle
-                  setActiveMainCategory(activeMainCategory === 'tumu' ? null : 'tumu');
+                  // Tümü toggle - diğerlerini temizle
+                  const isSelected = activeMainCategories.includes('tumu');
+                  if (isSelected) {
+                    setActiveMainCategories([]);
+                    setActiveSubFilters([]);
+                  } else {
+                    setActiveMainCategories(['tumu']);
+                    setActiveSubFilters([]);
+                  }
                   setExpandedMain(null);
                   deactivateDormsCategory();
                 } else if (mainCat.id === 'isletmeler') {
-                  // İşletmeler - expand/collapse
-                  if (expandedMain === 'isletmeler') {
+                  // İşletmeler - expand/collapse ve toggle
+                  const isSelected = activeMainCategories.includes('isletmeler');
+                  if (isSelected) {
+                    setActiveMainCategories(prev => prev.filter(id => id !== 'isletmeler'));
+                    setActiveSubFilters([]);
                     setExpandedMain(null);
-                    setActiveMainCategory(null);
-                    setActiveSubFilter(null);
                   } else {
+                    setActiveMainCategories(prev => [...prev, 'isletmeler']);
                     setExpandedMain('isletmeler');
-                    setActiveMainCategory('isletmeler');
                   }
                   deactivateDormsCategory();
                 } else if (mainCat.id === 'yurtlar') {
                   // Yurtlar kategorisi - toggle
-                  if (activeMainCategory === 'yurtlar') {
-                    setActiveMainCategory(null);
+                  const isSelected = activeMainCategories.includes('yurtlar');
+                  if (isSelected) {
+                    setActiveMainCategories(prev => prev.filter(id => id !== 'yurtlar'));
                     deactivateDormsCategory();
                   } else {
-                    setActiveMainCategory('yurtlar');
-                    setExpandedMain(null);
-                    setActiveSubFilter(null);
+                    setActiveMainCategories(prev => [...prev, 'yurtlar']);
                     activateDormsCategory();
                   }
                 } else {
-                  // Diğer üst kategoriler
-                  setActiveMainCategory(mainCat.id);
-                  setExpandedMain(null);
-                  setActiveSubFilter(null);
+                  // Diğer üst kategoriler - toggle
+                  const isSelected = activeMainCategories.includes(mainCat.id);
+                  if (isSelected) {
+                    setActiveMainCategories(prev => prev.filter(id => id !== mainCat.id));
+                  } else {
+                    setActiveMainCategories(prev => [...prev, mainCat.id]);
+                  }
                   deactivateDormsCategory();
                 }
               }}
               className={`px-[10px] py-[6px] rounded-[20px] text-[11px] font-medium transition-colors whitespace-nowrap ${
-                activeMainCategory === mainCat.id 
+                activeMainCategories.includes(mainCat.id)
                   ? 'bg-blue-500 text-white border border-blue-500' 
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
               }`}
               style={{
-                borderColor: activeMainCategory === mainCat.id ? '#3B82F6' : '#D1D5DB'
+                borderColor: activeMainCategories.includes(mainCat.id) ? '#3B82F6' : '#D1D5DB'
               }}
             >
               {mainCat.emoji} {mainCat.label}
             </button>
             
-            {/* Alt kategoriler - sadece İşletmeler için göster */}
-            {mainCat.id === 'isletmeler' && expandedMain === 'isletmeler' && mainCat.subs && (
+            {/* Alt kategoriler - sadece İşletmeler seçiliyse göster */}
+            {mainCat.id === 'isletmeler' && activeMainCategories.includes('isletmeler') && mainCat.subs && (
               <div className="ml-3 mt-2 flex flex-col gap-1.5">
                 {subFilters
                   .filter(sub => mainCat.subs?.includes(sub.id))
                   .map((sub) => (
                     <button
                       key={sub.id}
-                      onClick={() => setActiveSubFilter(activeSubFilter === sub.id ? null : sub.id)}
+                      onClick={() => {
+                        const isSelected = activeSubFilters.includes(sub.id);
+                        if (isSelected) {
+                          setActiveSubFilters(prev => prev.filter(id => id !== sub.id));
+                        } else {
+                          setActiveSubFilters(prev => [...prev, sub.id]);
+                        }
+                      }}
                       className={`px-3 py-1.5 rounded-[16px] text-[10px] font-medium transition-colors whitespace-nowrap ${
-                        activeSubFilter === sub.id 
+                        activeSubFilters.includes(sub.id)
                           ? 'bg-green-500 text-white border border-green-500' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                       }`}
@@ -1214,7 +1256,7 @@ export function MapView() {
       </div>
       
       <MapContainer
-        center={uni}
+        center={[41.088305064846935, 29.08872394722807]}
         zoom={14}
         minZoom={10}
         maxZoom={18}
@@ -2119,7 +2161,7 @@ export function MapView() {
                   </button>
                   <button 
                     onClick={() => {
-                      setActiveMainCategory('yurtlar');
+                      setActiveMainCategories(prev => [...prev, 'yurtlar']);
                       activateDormsCategory();
                       openDormsPanel();
                     }}

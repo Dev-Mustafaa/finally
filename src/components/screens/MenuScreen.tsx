@@ -1,6 +1,7 @@
 import {
   Bus,
   Wallet,
+  BarChart3,
   Heart,
   ShoppingBag,
   GraduationCap,
@@ -12,8 +13,6 @@ import {
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import type { ModuleId } from "@/lib/modules";
-import { PahalikGostergesi } from "@/components/ui/PahalikGostergesi";
-import { ErişilebilirlikTab } from "@/components/tabs/EtkinliklerTab";
 
 type Module = {
   id: ModuleId;
@@ -26,6 +25,7 @@ type Module = {
 const MODULES: Module[] = [
   { id: "ulasim", label: "Ulaşım", Icon: Bus, bg: "#EFF6FF", color: "#2563EB" },
   { id: "butce", label: "Bütçe", Icon: Wallet, bg: "#F0FDF4", color: "#16A34A" },
+  { id: "pahalilik", label: "Pahalılık", Icon: BarChart3, bg: "#FFF7ED", color: "#EA580C" },
   { id: "saglik", label: "Sağlık", Icon: Heart, bg: "#FFF1F2", color: "#E11D48" },
   { id: "ihtiyaclar", label: "İhtiyaçlar", Icon: ShoppingBag, bg: "#FFFBEB", color: "#D97706" },
   { id: "burslar", label: "Burslar", Icon: GraduationCap, bg: "#FAF5FF", color: "#7C3AED" },
@@ -90,15 +90,6 @@ export function MenuScreen({ onOpenModule, onOpenSchool, onOpenDistrict }: Props
             </button>
           ))}
         </div>
-      </section>
-
-      <ErişilebilirlikTab />
-
-      <section>
-        <h3 className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#6B7280]">
-          İlçe Pahalılık Göstergesi
-        </h3>
-        <PahalikGostergesi />
       </section>
     </div>
   );

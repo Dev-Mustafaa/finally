@@ -19,6 +19,7 @@ import { BurslarTab } from "@/components/tabs/BurslarTab";
 import { GelisimTab } from "@/components/tabs/GelisimTab";
 import { IlkHaftaTab } from "@/components/tabs/IlkHaftaTab";
 import { ErişilebilirlikTab } from "@/components/tabs/EtkinliklerTab";
+import { PahalilikTab } from "@/components/tabs/PahalilikTab";
 import { MenuScreen } from "@/components/screens/MenuScreen";
 import { useAppContext } from "@/context/AppContext";
 import { MODULE_TITLES, type ModuleId } from "@/lib/modules";
@@ -64,6 +65,7 @@ function renderModule(id: ModuleId) {
   switch (id) {
     case "ulasim": return <UlasimTab />;
     case "butce": return <ButceTab />;
+    case "pahalilik": return <PahalilikTab />;
     case "saglik": return <SaglikTab />;
     case "ihtiyaclar": return <IhtiyaclarTab />;
     case "burslar": return <BurslarTab />;
@@ -74,7 +76,7 @@ function renderModule(id: ModuleId) {
 }
 
 function Index() {
-  const [active, setActive] = useState<TabId>("menu");
+  const [active, setActive] = useState<TabId>("harita");
   const [subPage, setSubPage] = useState<ModuleId | null>(null);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
